@@ -4,7 +4,8 @@ const Employee = require('./src/Employee');
 const Engineer = require('./src/Engineer');
 const Intern = require('./src/Intern');
 const Manager = require('./src/Manager');
-const data = []
+const { exit } = require('process');
+var employeeData = new Array();
 let questions = [{
     type: 'input',
     message: 'Enter name',
@@ -20,15 +21,16 @@ let questions = [{
     message: 'Enter email',
     name: 'email'
 }];
-function employeePrompt(role){
+function employeePrompt(role,callback){
     inquirer
     .prompt(questions).then((data)=>{
-        let employeeData = new Employee(data.name, data.id, data.email)
-        data.push = employeeData
+        let employee = new Employee(data.name, data.id, data.email)
+        employeeData.push(employee) 
         console.log('Employee info entered successfully!')
+        callback()
     })
 }
-function internPrompt(role){
+function internPrompt(role,callback){
     const iQuestions = [{
     type: 'input',
     message: 'Enter your school name',
@@ -38,11 +40,12 @@ function internPrompt(role){
     inquirer 
     .prompt(internQuestions).then((data)=>{
         let internData = new Intern(data.name, data.id, data.email, data.school)
-        data.push = internData
+        employeeData.push(internData)
         console.log('Intern info entered successfully!')
+        callback()
     })
 }
-function engineerPrompt(role){
+function engineerPrompt(role,callback){
     const iQuestions = [{
         type: 'input',
         message: 'Enter your Github',
@@ -52,11 +55,12 @@ function engineerPrompt(role){
     inquirer
     .prompt(engineerQuestions).then((data)=>{
         let engineerData = new Engineer(data.name, data.id, data.email, data.github)
-        data.push = engineerData
+        employeeData.push(engineerData)
         console.log('Engineer info entered successfully!')
+        callback()
     })
 }
-function managerPrompt(role){
+function managerPrompt(role,callback){
     const iQuestions = [{
         type: 'input',
         message: 'Enter office number',
@@ -65,29 +69,48 @@ function managerPrompt(role){
     const managerQuestions = questions.concat(iQuestions)
     inquirer
     .prompt(managerQuestions).then((data)=>{
-        let managerData = new manager(data.name, data.id, data.email, data.office)
-        data.push = managerData
+        let managerData = new Manager(data.name, data.id, data.email, data.office)
+        employeeData.push(managerData)
         console.log('Manager info entered successfully!')
+        callback()
     })
 }
 function generateHTML(){
     let employeeList = '' 
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < employeeData.length; i++) {
         employeeList += `<li><p>
-            name:${data[i].getName()}
-            id:${data[i].getId()}
-            email:${data[i].getEmail()}`
-            if (data[i].getRole()=='Intern'){
-                employeeList += `School:${data[i].getSchool()}`
-            } else if (data[i].getRole()=='Engineer'){
-                employeeList += `Github:${data[i].getGithub()}`
-            } else if (data[i].getRole()=='Manager'){
-                employeeList += `Office:${data[i].getOffice()}`
+            name:${employeeData[i].getName()}
+            id:${employeeData[i].getId()}
+            email:${employeeData[i].getEmail()}`
+            if (employeeData[i].getRole()=='Intern'){
+                employeeList += `School:${employeeData[i].getSchool()}`
+            } else if (employeeData[i].getRole()=='Engineer'){
+                employeeList += `Github:${employeeData[i].getGithub()}`
+            } else if (employeeData[i].getRole()=='Manager'){
+                employeeList += `Office:${employeeData[i].getOffice()}`
             };
             employeeList += '</p></li>'
-      };
-    document.getElementById('textInput').innerHTML
-}
+      }
+    let htmlText =
+        `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta http-equiv="X-UA-Compatible" content="ie=edge">
+          <title>Employee Info</title>
+          <link rel="stylesheet" href="style.css">
+          <link rel="icon" href="./favicon.ico" type="image/x-icon">
+        </head>
+        <header><u>Employee List</u></header>
+        <body>
+              <ul id="textInput">${employeeList}</ul>
+          <script src="index.js"></script>
+        </body>
+        </html>`;  
+        fs.writeFile('index.html', htmlText, (err) =>
+        err ? console.error(err) : console.log('Success!'));
+    };
 
 function questionInitializer (){
     const questionInIt = [
@@ -97,21 +120,20 @@ function questionInitializer (){
         default: 'Employee',
         name: 'role',
         }];
-    inquirer.prompt(questionInIt).then((initData)=>{
-            data.push(initData);
+        inquirer.prompt(questionInIt).then((initData)=>{ 
             if (initData.role == 'Employee'){
-                employeePrompt(initData);
+                employeePrompt(initData,questionInitializer);
             } else if (initData.role == 'Engineer'){
-                engineerPrompt(initData);
+                engineerPrompt(initData,questionInitializer);
             } else if (initData.role == 'Intern'){
-                internPrompt(initData);
+                internPrompt(initData,questionInitializer);
             } else if (initData.role == 'Manager'){
-                managerPrompt(initData);
+                managerPrompt(initData,questionInitializer);
             } else if (initData.role == 'Exit'){
                 generateHTML(initData);
-            }
-    })
-}
+            } 
+        })
+    }
 
 questionInitializer();
 
